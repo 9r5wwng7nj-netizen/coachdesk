@@ -1,0 +1,23 @@
+{
+  "name": "coach-desk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Offline-first app for personal trainers: clients, intake, program builder and session logging.",
+  "type": "module",
+  "scripts": {
+    "start": "http-server . -p 8080 -c-1 -o /index.html",
+    "build:css": "tailwindcss -i src/app.css -o assets/app.css --minify",
+    "check": "node scripts/check.mjs",
+    "test": "npm run build:css && node scripts/check.mjs && playwright test",
+    "test:install": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@tailwindcss/cli": "4.3.0",
+    "http-server": "^14.1.1",
+    "tailwindcss": "4.3.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

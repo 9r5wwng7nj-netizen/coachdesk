@@ -1,0 +1,17 @@
+# Dependencies & test output
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
+# Client data — never commit backups or client exports
+coach-desk-*.json
+*backup*.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

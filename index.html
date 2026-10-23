@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Coach Desk</title>
+<meta name="theme-color" content="#0f766e" />
+<meta name="robots" content="noindex" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon.png" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Coach Desk" />
+<link rel="icon" href="./assets/icons/icon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="./assets/app.css" />
+<script>
+  // Apply theme before paint to avoid a flash
+  (function(){try{var s=JSON.parse(localStorage.getItem('cd.settings')||'{}');var t=s.theme||'system';if(t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');}catch(e){}})();
+</script>
+<script src="./vendor/lucide/lucide-1.55.0.min.js"></script>
+<style>
+  html, body { height: 100%; }
+  /* Installed on a phone: keep the shell clear of the home indicator and rounded corners. */
+  #app-shell { padding-bottom: env(safe-area-inset-bottom); padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+  #sidebar { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+  header.top-bar { padding-top: env(safe-area-inset-top); height: calc(3.5rem + env(safe-area-inset-top)); }
+  /* Phones: the bottom bar takes the home-indicator space itself, and the timer and messages sit above it. */
+  @media (max-width: 767px) {
+    #app-shell { padding-bottom: 0; }
+    #bottom-bar { padding-bottom: env(safe-area-inset-bottom); }
+    #timer { bottom: calc(4.75rem + env(safe-area-inset-bottom)); }
+    #toasts { bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+  }
+  #sidebar { transform: translateX(-100%); transition: transform .2s ease, width .2s ease; }
+  #sidebar.open { transform: none; }
+  @media (min-width: 768px) {
+    #sidebar { transform: none; }
+    #sidebar.collapsed { width: 4.25rem; }
+    #sidebar.collapsed .nav-label { display: none; }
+    #sidebar.collapsed .nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
+  }
+  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+  .tabular-nums { font-variant-numeric: tabular-nums; }
+  @keyframes flash { 0%,100% { box-shadow: 0 0 0 0 rgba(20,184,166,.0); } 50% { box-shadow: 0 0 0 8px rgba(20,184,166,.45); } }
+  .timer-flash { animation: flash .6s ease-in-out 6; }
+  details > summary::-webkit-details-marker { display: none; }
+  .scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scroll-thin::-webkit-scrollbar-thumb { background: rgba(100,116,139,.35); border-radius: 3px; }
+  textarea { resize: vertical; }
+  #print { display: none; }
+  /* iPhone zooms into any field whose text is under 16px and does not zoom back out. */
+  @media (pointer: coarse) { input, select, textarea { font-size: 16px !important; } }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 antialiased">
+<a class="skip-link" href="#view">Skip to main content</a>
+<div id="app-shell" class="flex h-[100dvh] overflow-hidden">
+  <div id="sidebar-backdrop" class="fixed inset-0 bg-black/40 z-30 hidden" data-action="closeSidebar"></div>
+  <aside id="sidebar" class="fixed md:static z-40 inset-y-0 left-0 w-64 shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
+    <div class="h-14 flex items-center gap-2.5 px-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
+      <div class="w-8 h-8 rounded-lg bg-brand-600 text-white grid place-items-center shrink-0"><i data-lucide="clipboard-list" class="w-4 h-4"></i></div>
+      <span class="nav-label font-semibold tracking-tight">Coach Desk</span>
+    </div>
+    <nav id="nav" aria-label="Main navigation" class="flex-1 overflow-y-auto scroll-thin p-2 space-y-0.5"></nav>
+    <div class="p-2 border-t border-slate-200 dark:border-slate-800 space-y-0.5">
+      <button class="nav-item w-full" data-action="openSettings" title="Settings &amp; backup"><i data-lucide="settings" class="w-5 h-5 shrink-0"></i><span class="nav-label">Settings &amp; backup</span></button>
+      <button class="nav-item w-full" data-action="cycleTheme" title="Toggle theme"><i data-lucide="sun-moon" class="w-5 h-5 shrink-0"></i><span class="nav-label" id="theme-label">Theme</span></button>
+      <button class="nav-item w-full hidden md:flex" data-action="toggleCollapse" title="Collapse sidebar"><i data-lucide="panel-left" class="w-5 h-5 shrink-0"></i><span class="nav-label">Collapse</span></button>
+    </div>
+  </aside>
+  <div class="flex-1 flex flex-col min-w-0">
+    <header class="top-bar shrink-0 flex items-center gap-2 px-3 md:px-6 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur">
+      <button class="btn btn-ghost md:hidden" data-action="openSidebar" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false"><i data-lucide="menu" class="w-5 h-5"></i></button>
+      <h1 id="view-title" tabindex="-1" class="font-semibold truncate"></h1>
+      <div class="ml-auto flex items-center gap-2">
+        <span id="header-date" class="hidden sm:inline text-sm muted"></span>
+        <button id="session-btn" class="btn btn-sm btn-primary hidden" data-action="go" data-view="session"><i data-lucide="activity" class="w-4 h-4"></i><span>Session</span></button>
+        <button class="btn btn-sm" data-action="showTimer" title="Rest timer" aria-label="Rest timer"><i data-lucide="timer" class="w-4 h-4"></i><span class="hidden sm:inline">Timer</span></button>
+      </div>
+    </header>
+    <main id="view" tabindex="-1" aria-labelledby="view-title" class="flex-1 overflow-y-auto scroll-thin"></main>
+    <nav id="bottom-bar" aria-label="Quick navigation" class="md:hidden shrink-0 flex items-stretch px-1 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur"></nav>
+  </div>
+</div>
+<div id="timer" class="fixed z-40 bottom-4 right-4 hidden"></div>
+<div id="modal" class="fixed inset-0 z-50 hidden"></div>
+<div id="toasts" class="fixed z-[60] bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none"></div>
+<div id="status-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+<div id="error-announcement" class="sr-only" role="alert" aria-atomic="true"></div>
+<input type="file" id="file-input" class="hidden" />
+<div id="print"></div>
+
+<!-- Application code. Classic scripts share one global scope, in this order; see AGENTS.md. -->
+<script src="./js/core.js"></script>
+<script src="./js/library.js"></script>
+<script src="./js/programs.js"></script>
+<script src="./js/clients.js"></script>
+<script src="./js/sessions.js"></script>
+<script src="./js/home.js"></script>
+<script src="./js/settings.js"></script>
+<script src="./js/app.js"></script>
+</body>
+</html>
